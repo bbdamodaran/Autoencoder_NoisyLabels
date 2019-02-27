@@ -191,36 +191,6 @@ for i in np.arange(len(noise)):
     cce_param = dnn.K.variable(1.0)
     re_param = dnn.K.variable(0.2)
 
-    def L2_norm(vects):
-        '''
-        compute the squared L2 distance between two matrics
-        '''
-        x, y = vects
-        ndim = x.shape
-        if len(ndim) == 4:
-            x = dnn.K.reshape(x, (128, ndim[1] * ndim[2] * ndim[3]))
-            y = dnn.K.reshape(y, (128, ndim[1] * ndim[2] * ndim[3]))
-        dist = dnn.K.reshape(dnn.K.sum(dnn.K.square(x), 1), (-1, 1))
-        dist += dnn.K.reshape(dnn.K.sum(dnn.K.square(y), 1), (1, -1))
-        dist -= 2.0 * dnn.K.dot(x, dnn.K.transpose(y))
-        return dnn.K.sum(dist)
-
-
-    batch_size = 128
-    def reconst_loss(y_true, y_pred):
-        sup_reconst = y_pred[:batch_size]
-        unsup_reconst = y_pred[batch_size:]
-        sup_diff = L2_norm((sup_reconst, y_true))
-        unsup_diff = L2_norm((unsup_reconst, y_true))
-        # total_reconst_unsup = unsup_reconst+dnn.K.stop_gradient(sup_reconst)
-        # total_reconst_sup = dnn.K.stop_gradient(unsup_reconst) +sup_reconst
-        total_reconst_unsup = unsup_reconst
-        total_reconst_sup =  sup_reconst
-        reconst = dnn.K.switch(dnn.K.greater_equal(unsup_diff,sup_diff), total_reconst_unsup,  total_reconst_sup)
-        loss = dnn.K.binary_crossentropy(y_true, reconst)
-        return loss
-
-
 
     if reconstruction == False:
         noisy_model = get_model(data_set, ms1, nclass=n_class, classifier=True, drop_out=0.5)
